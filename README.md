@@ -262,14 +262,28 @@ pip install beautifulsoup4 markitdown pymupdf
 ### 知识库管理
 
 ```bash
+# 健康检查脚本 vault_health_check.py 零依赖，纯标准库，无需安装
+
+# 以下为可选的第三方工具（不随本仓库提供）：
 # GBrain（知识库搜索）
 pip install gbrain
+# GraphRAG（知识图谱发现）— 独立项目，见 SKILL.md
+# LLM Wiki — 集成到 Obsidian vault
+```
 
-# GraphRAG（知识图谱发现）
-# 独立项目，见 SKILL.md
+### 行业情报雷达
 
-# LLM Wiki
-# 集成到 Obsidian vault
+```bash
+# scan.py 零依赖，纯标准库（HN + V2EX + RSS），无需安装、无需 API Key
+# X/即刻信号由 Agent 联网搜索补充（可选）
+```
+
+### 学习笔记自动化
+
+```bash
+# make_notes.py 需要 DeepSeek API Key 做知识点提取 + 闪卡生成
+export DEEPSEEK_API_KEY=***
+# 转录环节复用本仓库的 *-transcribe skill（见上方「视频转录」依赖）
 ```
 
 ---
