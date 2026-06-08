@@ -38,8 +38,8 @@ python scripts/transcribe.py "https://vm.tiktok.com/xxxxx"
 
 ## 已知限制
 
-- TikTok 有地区限制，部分内容可能无法访问
-- SenseVoice-Small 主要针对中文优化
+- TikTok 有地区限制，部分内容可能无法访问（脚本已默认 `--geo-bypass`）
+- 脚本用 `language=auto` 自动识别中英文；但 SenseVoice-Small 对中文识别最佳，纯英文长视频建议改用 youtube-transcribe（含 Whisper + 翻译）
 
 ## 致谢
 

@@ -34,9 +34,13 @@ wiki/    → Layer 2: AI 编译的结构化知识（AI 维护）
 
 ### Vault 配置
 
-- **主知识库**：`~/Documents/wiki-guanbuGuo/`
-- **次知识库**：`~/Documents/chubby的知识库/`（团队协作文档）
-- **健康检查 cron**：每周日 9:00
+vault 路径通过环境变量配置，不写死在脚本里：
+
+```bash
+export VAULT_DIR="$HOME/Documents/your-vault"   # 你的 Obsidian vault 根目录
+```
+
+- **健康检查 cron**：建议每周日 9:00 运行 `scripts/vault_health_check.py`（见第 2 节）
 
 ---
 
@@ -65,8 +69,10 @@ wiki/    → Layer 2: AI 编译的结构化知识（AI 维护）
 **来源一：wechat-article-exporter 自动同步（每天 07:00 cron）**
 公众号文章直接存入 `素材库/公众号文章/<公众号名>/`，每日自动增量同步。
 
-**来源二：笔记同步助手 手机同步（每天 08:00 cron `7a53a87463d5`）**
-用户通过手机保存的文章自动同步到 `笔记同步助手/`（按日期目录），每天运行 `python3 ~/.hermes/scripts/sync_notes_to_kb.py` 归类到素材库并按领域筛选优质文章做 A+B 深度处理。
+**来源二：手机保存的文章同步（每天 08:00 cron）**
+通过手机保存的文章先落到一个待处理目录（按日期），再由一个归类脚本搬入素材库并按领域筛选优质文章做 A+B 深度处理。
+
+> 归类脚本（如 `sync_notes_to_kb.py`）与各人的目录结构强相关，本仓库不内置，按下面的「工作流」自建即可。
 
 **工作流**：
 ```
@@ -100,14 +106,22 @@ wiki/    → Layer 2: AI 编译的结构化知识（AI 维护）
 - 待沉淀概念
 - 低链接密度
 
-**脚本**：`~/Documents/wiki-guanbuGuo/tools/vault_health_check.py`
+**脚本**：`scripts/vault_health_check.py`（本仓库提供，零依赖，纯标准库）
 
 ```bash
-# 手动运行
-cd ~/Documents/wiki-guanbuGuo && python3 tools/vault_health_check.py --json
+# 指定 vault 路径
+python3 scripts/vault_health_check.py "$HOME/Documents/your-vault"
+
+# 或读 VAULT_DIR 环境变量
+export VAULT_DIR="$HOME/Documents/your-vault"
+python3 scripts/vault_health_check.py --json
+
+# 把缺 source 字段也视为问题（强溯源场景）
+python3 scripts/vault_health_check.py --require-source
 ```
 
-**⚠️ PITFALL：cron job 必须显式指定 `model: deepseek-v4-flash`**，否则默认模型可能 API Key 过期导致 401。
+检查项：断链、缺 frontmatter/source/summary、孤立笔记、空目录、内容重复、文件名含空格。
+存在断链时退出码为 1，方便接入 cron / CI 告警。
 
 ### 清理标准
 
@@ -150,6 +164,10 @@ summary: 已被 [[新位置/新文件名|新版本]] 取代。
 ---
 
 ## 3. 工具集成 (Tools)
+
+> 以下均为**可选的第三方/外部工具**，不随本仓库提供。路径（如 `~/graphrag-poc/`、
+> `~/.hermes/...`）是作者本机的示例位置，请替换为你自己的安装路径。没有它们也不影响
+> 第 1、2 节的核心流程与 `scripts/vault_health_check.py`。
 
 ### 知识库三件套
 

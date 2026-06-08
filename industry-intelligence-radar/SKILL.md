@@ -20,14 +20,16 @@ tags: [intelligence, monitoring, x-search, trends]
 
 ## 数据源
 
-| 数据源 | 工具 | 更新频率 | 信号强度 |
-|--------|------|----------|----------|
-| X/Twitter | `x_search` | 实时 | ⭐⭐⭐⭐⭐ |
-| 即刻 | web_search | 实时 | ⭐⭐⭐⭐ |
-| V2EX | web_search | 分钟级 | ⭐⭐⭐ |
-| Hacker News | web_search | 分钟级 | ⭐⭐⭐⭐ |
-| 36kr | web_search | 小时级 | ⭐⭐⭐ |
-| 虎嗅 | web_search | 小时级 | ⭐⭐⭐ |
+| 数据源 | 接入方式 | 是否需配置 | 信号强度 |
+|--------|----------|------------|----------|
+| Hacker News | `scan.py` 内置（Algolia API） | 否（免费） | ⭐⭐⭐⭐ |
+| V2EX | `scan.py` 内置（官方热门 API） | 否（免费） | ⭐⭐⭐ |
+| 36kr / 虎嗅 / 少数派等 | `scan.py` RSS 源（config.rss） | 否（填 RSS 地址即可） | ⭐⭐⭐ |
+| X/Twitter | Agent 联网搜索 / X API | 需 X API Key | ⭐⭐⭐⭐⭐ |
+| 即刻 | Agent 联网搜索 | 需搜索能力 | ⭐⭐⭐⭐ |
+
+> `scan.py` 仅用 Python 标准库即可跑通 HN + V2EX + 任意 RSS 源，零依赖、无需 API Key。
+> X/即刻没有稳定的公开接口，由 Agent 用联网搜索能力补充（见 Phase 1）。
 
 ## 关键词矩阵
 
@@ -61,30 +63,43 @@ AI/Agent:
 
 创业/投资:
   - "创业" OR "融资" OR "投资"
-  - "YC" OR "a]6z" OR "红杉"
+  - "YC" OR "a16z" OR "红杉"
 ```
 
 ## 工作流程
 
-### Phase 1: 多源扫描（并行）
+### Phase 1: 多源扫描
+
+**① 脚本扫描（HN + V2EX + RSS，免费、可 cron）**
 
 ```bash
-# X/Twitter（最高效的信号源）
-x_search "AI agent OR LLM OR 大模型" --max_results 20
-x_search "半导体 OR 芯片 OR NVIDIA" --max_results 10
-x_search "创业 OR 融资 OR YC" --max_results 10
+# 用内置关键词矩阵扫最近 24 小时，输出简报到文件
+python3 scripts/scan.py --hours 24 --output 简报-$(date +%F).md
 
-# 即刻（中文高质量讨论）
-web_search "site:okjike.com AI OR Agent OR 创业" --max_results 10
+# 自定义关键词 / 追加 RSS 源（36kr、虎嗅、少数派等）
+python3 scripts/scan.py --config keywords.json --hours 24
+```
 
-# V2EX（技术社区）
-web_search "site:v2ex.com AI OR 半导体 OR 创业" --max_results 10
+`keywords.json` 示例：
 
-# Hacker News（全球技术趋势）
-web_search "site:news.ycombinator.com AI OR LLM OR agent" --max_results 10
+```json
+{
+  "keywords": {
+    "AI/Agent": ["AI agent", "LLM", "Claude", "MCP"],
+    "半导体": ["半导体", "NVIDIA", "TSMC"]
+  },
+  "high_signal": ["融资", "发布", "launch", "raise"],
+  "rss": ["https://www.36kr.com/feed", "https://sspai.com/feed"]
+}
+```
 
-# 36kr（商业资讯）
-web_search "site:36kr.com AI OR 融资 OR 创业" --max_results 10
+**② Agent 联网补充（X / 即刻，需搜索能力）**
+
+脚本覆盖不到的实时社交信号，由 Agent 用联网搜索补充，再并入简报：
+
+```
+搜索 X/Twitter："AI agent OR LLM OR 大模型" 最近 24 小时高互动内容
+搜索即刻："AI OR Agent OR 创业" 高质量讨论
 ```
 
 ### Phase 2: 信号过滤

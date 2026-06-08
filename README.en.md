@@ -38,7 +38,7 @@ Each Skill here is a structured instruction set that Agents can load directly, f
 In any Agent that supports Skills (Claude Code, Codex, OpenClaw, Hermes, etc.), just say:
 
 ```
-Install this skill: https://github.com/chubbyxiaopangdun/chubbyskills/tree/main/<skill-name>
+Install this skill: https://gitee.com/chubbyguan/chubbyskills/tree/main/<skill-name>
 ```
 
 Replace `<skill-name>` with the one you want, like `douyin-transcribe`, `podcast-transcribe`, or `bilibili-transcribe`. The Agent will clone it to the right directory automatically.

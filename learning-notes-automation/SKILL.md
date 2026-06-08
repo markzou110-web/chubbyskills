@@ -33,18 +33,33 @@ tags: [learning, notes, anki, knowledge-extraction]
 
 ### Phase 1: 内容转录
 
+复用本仓库的转录 skill（相对路径，按需替换为你的安装位置）：
+
 ```bash
-# YouTube
-python3 ~/.hermes/skills/media/youtube-content/scripts/transcribe.py "https://youtube.com/watch?v=xxx"
+# YouTube（自动翻译）
+python3 ../youtube-transcribe/scripts/transcribe.py "https://youtube.com/watch?v=xxx" -o ./
 
 # B站
-python3 ~/.hermes/skills/media/bilibili-transcribe/scripts/transcribe.py "https://bilibili.com/video/xxx"
+python3 ../bilibili-transcribe/scripts/transcribe.py "https://bilibili.com/video/xxx" ./
 
 # 播客
-python3 ~/.hermes/skills/media/podcast-transcribe/scripts/transcribe.py "https://xiaoyuzhoufm.com/episode/xxx"
+python3 ../podcast-transcribe/scripts/transcribe.py "https://xiaoyuzhoufm.com/episode/xxx" ./
 ```
 
-### Phase 2: 知识点提取
+输出是一份转录 Markdown，作为 Phase 2 的输入。
+
+### Phase 2 + 3: 知识点提取 + 闪卡生成（一步到位）
+
+把转录稿交给 `make_notes.py`，自动提取知识点并生成 Anki 兼容闪卡：
+
+```bash
+export DEEPSEEK_API_KEY=***
+python3 scripts/make_notes.py 转录稿.md --output ./notes --max-cards 20
+# 产出：<标题>-学习笔记.md（核心要点+闪卡+关联知识） 和 <标题>-闪卡.csv（直接导入 Anki）
+```
+
+> 脚本用 DeepSeek 输出结构化 JSON，再渲染成下面约定的笔记与闪卡格式。
+> 下面是各维度的设计说明，供理解和手动微调时参考。
 
 **提取维度**：
 
