@@ -15,6 +15,7 @@ import json
 import subprocess
 import tempfile
 import shutil
+import urllib.request
 from datetime import datetime
 
 
@@ -94,20 +95,18 @@ def transcribe_audio(audio_path: str) -> tuple:
 
 def translate_text(text: str, api_key: str = None) -> str:
     """Translate English to Chinese using DeepSeek API."""
-    # Try to get API key from environment
     if not api_key:
         api_key = os.environ.get("DEEPSEEK_API_KEY")
-    
+
     if not api_key:
         print("  ⚠️  No DEEPSEEK_API_KEY, skipping translation", file=sys.stderr)
         return None
-    
+
     print("  🌐 Translating to Chinese...", file=sys.stderr)
-    
+
     # Split into chunks if too long
     chunks = []
     if len(text) > 4000:
-        # Split by paragraphs
         paragraphs = text.split('\n\n')
         current_chunk = ""
         for para in paragraphs:
@@ -120,35 +119,39 @@ def translate_text(text: str, api_key: str = None) -> str:
             chunks.append(current_chunk)
     else:
         chunks = [text]
-    
+
     translated_chunks = []
     for i, chunk in enumerate(chunks):
         if len(chunks) > 1:
             print(f"  🌐 Translating chunk {i+1}/{len(chunks)}...", file=sys.stderr)
-        
+
         try:
-            result = subprocess.run(
-                ["curl", "-s", "https://api.deepseek.com/v1/chat/completions",
-                 "-H", "Content-Type: application/json",
-                 "-H", f"Authorization: Bearer {api_key}",
-                 "-d", json.dumps({
-                     "model": "deepseek-chat",
-                     "messages": [
-                         {"role": "system", "content": "你是专业翻译。将英文翻译成中文，保持原文风格和格式。不要添加额外解释。"},
-                         {"role": "user", "content": f"翻译以下英文为中文：\n\n{chunk}"}
-                     ],
-                     "temperature": 0.3
-                 })],
-                capture_output=True, text=True, timeout=120
+            payload = json.dumps({
+                "model": "deepseek-chat",
+                "messages": [
+                    {"role": "system", "content": "你是专业翻译。将英文翻译成中文，保持原文风格和格式。不要添加额外解释。"},
+                    {"role": "user", "content": f"翻译以下英文为中文：\n\n{chunk}"}
+                ],
+                "temperature": 0.3
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                "https://api.deepseek.com/v1/chat/completions",
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
             )
-            
-            response = json.loads(result.stdout)
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                response = json.loads(resp.read())
+
             translated = response['choices'][0]['message']['content']
             translated_chunks.append(translated)
         except Exception as e:
             print(f"  ⚠️  Translation failed: {e}", file=sys.stderr)
             return None
-    
+
     print(f"  ✅ Translation done", file=sys.stderr)
     return "\n\n".join(translated_chunks)
 

@@ -19,49 +19,116 @@ from datetime import datetime
 
 
 def download_audio(url: str, output_dir: str) -> tuple:
-    """Download audio from URL. Returns (audio_path, title)."""
-    # Extract title from URL or use default
+    """Download audio from podcast URL. Returns (audio_path, title).
+
+    Supports: direct audio URLs (.mp3/.m4a/.wav), 小宇宙, 喜马拉雅, RSS feeds.
+    """
     title = "Podcast Episode"
-    
-    # Try to get title from page
-    try:
-        result = subprocess.run(
-            ["curl", "-s", "-L", "--max-time", "30", url],
-            capture_output=True, text=True, timeout=35
-        )
-        # Try to extract title from HTML
-        import re
-        title_match = re.search(r'<title>(.*?)</title>', result.stdout, re.IGNORECASE)
+    audio_url = url
+
+    # If it's already a direct audio link, skip page parsing
+    if re.search(r'\.(mp3|m4a|wav|ogg|aac)(\?|$)', url, re.IGNORECASE):
+        try:
+            head = subprocess.run(
+                ["curl", "-sI", "-L", "--max-time", "15", url],
+                capture_output=True, text=True, timeout=20
+            )
+            for line in head.stdout.split('\n'):
+                if line.lower().startswith('content-disposition'):
+                    m = re.search(r'filename[*]?=["\']?([^"\';\r\n]+)', line)
+                    if m:
+                        title = m.group(1).strip()
+        except Exception:
+            pass
+    else:
+        # Fetch page HTML to extract audio URL and title
+        print(f"  Fetching page...", file=sys.stderr)
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "-L", "--max-time", "30", url],
+                capture_output=True, text=True, timeout=35
+            )
+            html = result.stdout
+        except Exception as e:
+            raise RuntimeError(f"Failed to fetch page: {e}")
+
+        # Extract title
+        title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
         if title_match:
             title = title_match.group(1).strip()
-            # Clean up title
-            title = title.split('|')[0].split('-')[0].strip()
-    except:
-        pass
-    
+            title = re.sub(r'\s*[-|—].*$', '', title)  # remove site suffix
+
+        # Try og:audio meta tag (小宇宙、喜马拉雅等常用)
+        og_audio = re.search(
+            r'<meta\s+(?:property|name)=["\']og:audio["\']\s+content=["\'](.*?)["\']',
+            html, re.IGNORECASE
+        )
+        if og_audio:
+            audio_url = og_audio.group(1)
+        else:
+            # Try <audio> tag src
+            audio_tag = re.search(r'<audio[^>]+src=["\'](.*?)["\']', html, re.IGNORECASE)
+            if audio_tag:
+                audio_url = audio_tag.group(1)
+            else:
+                # Try JSON-LD or inline JSON with audioUrl / mediaSrc
+                json_audio = re.search(
+                    r'["\'](?:audioUrl|mediaSrc|enclosure|url)["\']\s*:\s*["\']'
+                    r'(https?://[^"\']+\.(?:mp3|m4a|wav|ogg|aac)[^"\']*)["\']',
+                    html, re.IGNORECASE
+                )
+                if json_audio:
+                    audio_url = json_audio.group(1)
+                else:
+                    # Try any .mp3/.m4a URL in the page
+                    any_audio = re.search(
+                        r'(https?://[^\s"\'<>]+\.(?:mp3|m4a|wav|ogg|aac)(?:\?[^\s"\'<>]*)?)',
+                        html, re.IGNORECASE
+                    )
+                    if any_audio:
+                        audio_url = any_audio.group(1)
+                    else:
+                        raise RuntimeError(
+                            "Cannot extract audio URL from page. "
+                            "Try passing the direct audio link instead."
+                        )
+
+        print(f"  Audio URL: {audio_url[:80]}...", file=sys.stderr)
+
     # Generate filename
     safe_title = "".join(c for c in title if c.isalnum() or c in "-_ ").strip()
-    safe_title = safe_title[:50]
-    
-    # Determine file extension from URL
+    safe_title = safe_title[:50] or "episode"
+
+    # Determine file extension
     ext = ".m4a"
-    if ".mp3" in url:
+    url_lower = audio_url.lower()
+    if ".mp3" in url_lower:
         ext = ".mp3"
-    elif ".wav" in url:
+    elif ".wav" in url_lower:
         ext = ".wav"
-    
+    elif ".ogg" in url_lower:
+        ext = ".ogg"
+
     audio_path = os.path.join(output_dir, f"{safe_title}{ext}")
-    
+
     # Download
-    print(f"Downloading: {title[:60]}...", file=sys.stderr)
+    print(f"  Downloading: {title[:60]}...", file=sys.stderr)
     subprocess.run(
-        ["curl", "-L", "-o", audio_path, "--max-time", "1800", "-s", url],
+        ["curl", "-L", "-o", audio_path, "--max-time", "1800", "-s",
+         "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+         audio_url],
         timeout=1900, check=True
     )
-    
+
     size_mb = os.path.getsize(audio_path) / (1024 * 1024)
+    if size_mb < 0.01:
+        os.remove(audio_path)
+        raise RuntimeError(
+            f"Downloaded file is too small ({size_mb:.2f} MB), "
+            "likely not an audio file. Check the URL."
+        )
     print(f"  Audio: {size_mb:.1f} MB", file=sys.stderr)
-    
+
     return audio_path, title
 
 

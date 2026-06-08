@@ -7,7 +7,7 @@
 #### AI Skills I use daily, all open-sourced
 
 [![License](https://img.shields.io/badge/License-MIT-3B82F6?style=for-the-badge)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-3-10B981?style=for-the-badge)](#-skills)
+[![Skills](https://img.shields.io/badge/Skills-11-10B981?style=for-the-badge)](#-skills)
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-D97706?style=flat-square&logo=anthropic&logoColor=white)
 ![Codex](https://img.shields.io/badge/Codex-Skill-10B981?style=flat-square&logo=openai&logoColor=white)
@@ -35,13 +35,31 @@ Each Skill here is a structured instruction set that Agents can load directly, f
 
 ## 📦 Installation
 
+### Option 1: One-click install (Recommended)
+
+```bash
+git clone https://github.com/chubbyguan/chubbyskills.git
+cd chubbyskills
+bash setup.sh          # Install all dependencies
+bash setup.sh podcast   # Install for a specific skill only
+```
+
+### Option 2: Manual install
+
+```bash
+git clone https://github.com/chubbyguan/chubbyskills.git
+cd chubbyskills
+pip install -r requirements.txt            # All skills
+pip install -r podcast-transcribe/requirements.txt   # Single skill
+```
+
+### Option 3: Agent install
+
 In any Agent that supports Skills (Claude Code, Codex, OpenClaw, Hermes, etc.), just say:
 
 ```
-Install this skill: https://gitee.com/chubbyguan/chubbyskills/tree/main/<skill-name>
+Install this skill: https://github.com/chubbyguan/chubbyskills/tree/main/<skill-name>
 ```
-
-Replace `<skill-name>` with the one you want, like `douyin-transcribe`, `podcast-transcribe`, or `bilibili-transcribe`. The Agent will clone it to the right directory automatically.
 
 ---
 
@@ -152,34 +170,25 @@ Help me transcribe this bilibili
 
 ## 🔧 Requirements
 
-### douyin-transcribe / bilibili-transcribe
+### Quick install
 
 ```bash
-# Python 3.9+
-python -m venv .venv
-source .venv/bin/activate
+bash setup.sh          # All dependencies
+bash setup.sh podcast  # Specific skill only
+```
 
-# Dependencies
-pip install funasr modelscope torch torchaudio
+### douyin-transcribe / bilibili-transcribe / youtube-transcribe
 
-# System dependencies
-# macOS: brew install ffmpeg yt-dlp
-# Ubuntu: sudo apt install ffmpeg && pip install yt-dlp
+```bash
+pip install -r douyin-transcribe/requirements.txt
+# System: brew install ffmpeg yt-dlp  # macOS
 ```
 
 ### podcast-transcribe
 
 ```bash
-# Python 3.9+
-python -m venv .venv
-source .venv/bin/activate
-
-# Dependencies
-pip install faster-whisper
-
-# System dependencies
-# macOS: brew install ffmpeg
-# Ubuntu: sudo apt install ffmpeg
+pip install -r podcast-transcribe/requirements.txt
+# System: brew install ffmpeg  # macOS
 ```
 
 ---
@@ -194,6 +203,6 @@ I'm Chubby, an ordinary person折腾 in AI and content creation. These are skill
 
 [MIT License](./LICENSE) · Free to use / modify / redistribute
 
-Made by [@chubbyxiaopangdun](https://github.com/chubbyxiaopangdun)
+Made by [@chubbyguan](https://github.com/chubbyguan)
 
 </div>

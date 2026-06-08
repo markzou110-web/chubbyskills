@@ -201,29 +201,29 @@ gbrain stats
 
 ### GraphRAG 发现
 
-> **⚠️ 已移至独立项目**：`~/graphrag-poc/`
-> **Flask API**：localhost:8999
-> **内容**：1460 篇屠龙文章 + DeepSeek + BGE 嵌入
+> **⚠️ 已移至独立项目**：按你的实际安装路径配置
+> **Flask API**：localhost:8999（默认）
+> **内容**：自定义知识库 + DeepSeek + BGE 嵌入
 
 用于发现知识库中的隐性关联和跨领域连接。
 
 ### LLM Wiki（Karpathy 模式）
 
 Karpathy 的 LLM Wiki 模式：构建 interlinked markdown 知识库，让 LLM 在推理时直接查。
-已集成到 Obsidian vault `wiki-guanbuGuo`。
+已集成到 Obsidian vault。
 
 ### Understand-Anything — 知识图谱可视化
 
-已安装为 Hermes skill（`~/.hermes/skills/understand-anything/`）。
+已安装为独立 skill。
 
 **使用**：
 ```bash
-# 必须指向 wiki 根目录，必须用 python3.11
-python3.11 ~/.hermes/skills/understand-anything/understand-knowledge/parse-knowledge-base.py ~/Documents/wiki-guanbuGuo/wiki
+# 必须指向 wiki 根目录，必须用 python3.11+
+python3 parse-knowledge-base.py /path/to/your-vault/wiki
 ```
 
 **⚠️ 关键 pitfalls**：
-- Python 3.11+ 必需（系统 python 3.9.6 语法不兼容）
+- Python 3.11+ 必需
 - 必须指向 wiki 根目录（子目录没有 index.md 会报错）
 - Dashboard 需先 build core 包
 - 需要 GRAPH_DIR 和 ACCESS_TOKEN 环境变量

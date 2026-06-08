@@ -51,9 +51,12 @@ python scripts/batch_transcribe.py --rss-url "http://www.ximalaya.com/album/xxxx
 ### Step 1: 下载音频
 
 支持多种来源：
-- 小宇宙单集链接
-- 喜马拉雅 RSS 批量下载
-- 直接音频 URL
+- 小宇宙单集链接（自动从页面提取音频 URL）
+- 喜马拉雅链接
+- 直接音频 URL（.mp3/.m4a/.wav）
+- RSS feed 中的音频链接
+
+**注意**：小宇宙/喜马拉雅等平台会从页面 HTML 中自动解析 `og:audio`、`<audio>` 标签或内嵌 JSON 获取真实音频地址，无需手动提取。
 
 ### Step 2: faster-whisper 转录
 
